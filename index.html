@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>모두의 1:1 대입 면접 평가 v3.2</title>
+
+  <!-- Pretendard Font -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" />
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Pretendard Variable', sans-serif;
+      margin: 0;
+      background-color: #ffffff;
+      color: #1E2A38;
+      line-height: 1.6;
+    }
+    header {
+      background-color: #1E2A38;
+      color: white;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    header p {
+      margin: 0.3rem 0;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    .section {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .section h2 {
+      border-left: 5px solid #FF7A00;
+      padding-left: 10px;
+      color: #1E2A38;
+      margin-top: 0;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin: 0.8rem 0 0.3rem;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    textarea { height: 80px; }
+    button {
+      background-color: #FF7A00;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 1.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      transition: background 0.2s ease-in-out;
+    }
+    button:hover {
+      background-color: #e86f00;
+    }
+    .note {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 1rem;
+      background-color: #f9f9f9;
+      border-radius: 6px;
+      padding: 0.8rem;
+    }
+    .rubric-item {
+      margin-bottom: 1.2rem;
+    }
+    .rubric-item label {
+      font-size: 1.05rem;
+      color: #1E2A38;
+    }
+    .comment-select {
+      margin-top: 0.5rem;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>모두의 1:1 대입 면접 평가 v3.2</h1>
+    <p>Copyright@All Teachers (피드백: p3412@nate.com)</p>
+  </header>
+
+  <main>
+    <section class="section">
+      <h2>💾 평가 결과 저장 및 공유 안내</h2>
+      <p>
+        본 시스템은 이메일 발송 기능 없이, 선생님 개인 기기(PC·태블릿·스마트폰)에 
+        <strong>PDF 파일로 저장</strong>하여 활용하는 방식입니다.<br><br>
+        평가 후 <strong>‘📄 미리보기’ → ‘💾 PDF 저장’</strong> 버튼을 눌러 저장하고,<br>
+        저장된 파일은 <strong>카카오톡, 이메일 등으로 직접 전송</strong>하세요.<br><br>
+        ⚠️ 모든 평가 데이터는 외부 서버에 저장되지 않으며,
+        선생님 기기 내에서만 보관됩니다.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>👩‍🏫 기본 정보 입력</h2>
+      <label>학생 이름</label><input id="studentName" />
+      <label>대학</label><input id="university" />
+      <label>학과</label><input id="major" />
+      <label>전형</label><input id="admission" />
+      <label>면접 차시</label>
+      <select id="session">
+        <option>1차시</option>
+        <option>2차시</option>
+        <option>3차시</option>
+        <option>4차시</option>
+        <option>5차시</option>
+      </select>
+    </section>
+
+    <section class="section">
+      <h2>📊 평가 항목별 루브릭 및 코멘트</h2>
+      <div id="rubricContainer"></div>
+    </section>
+
+    <section class="section">
+      <h2>🗒️ 종합 피드백</h2>
+      <textarea id="feedback" placeholder="학생의 면접 태도, 발전 방향 등을 입력하세요."></textarea>
+    </section>
+
+    <section class="section" style="text-align:center;">
+      <button onclick="previewPDF()">📄 미리보기</button>
+      <button onclick="savePDF()">💾 PDF 저장</button>
+      <div class="note">💡 PDF로 저장 후 직접 공유하세요. 저장된 파일은 카카오톡·이메일 첨부로 전송할 수 있습니다.</div>
+    </section>
+  </main>
+
+  <script>
+    const rubricList = ["표현 및 소통능력", "전공적합성", "탐구력", "인성", "성장 가능성"];
+    const rubricDescriptions = {
+      "A": "탁월한 수준으로 해당 역량을 명확히 보여줌",
+      "B": "우수한 수준으로 전반적으로 우수함",
+      "C": "보통 수준으로 기본 역량을 갖춤",
+      "D": "다소 부족하나 잠재력이 있음",
+      "E": "기본 수준 미달로 보완이 필요함"
+    };
+
+    const comments = {
+      "표현 및 소통능력": [
+        "논리적으로 자신의 생각을 명확히 전달함.",
+        "질문에 대한 핵심을 잘 파악하여 대답함.",
+        "면접 상황에서도 차분하고 자연스러운 태도를 유지함.",
+        "의사 표현이 명료하고 자신감 있게 드러남.",
+        "적절한 예시를 활용해 설득력 있게 답변함.",
+        "목소리 톤과 표정이 안정적이며 태도가 진중함.",
+        "의미 전달은 명확하나 어휘 선택의 다양성이 부족함.",
+        "표현은 자연스럽지만 핵심 요약이 미흡함.",
+        "의사소통 과정에서 논리의 흐름이 다소 끊김.",
+        "말의 속도나 어투 조절에서 개선의 여지가 있음."
+      ],
+      "전공적합성": [
+        "지원 전공과 관련된 이해도와 흥미가 뚜렷함.",
+        "전공 관련 경험과 학습활동이 구체적으로 제시됨.",
+        "전공 관련 기초지식이 충분하며 탐구 의지가 강함.",
+        "전공 선택 동기가 명확하고 구체적인 근거를 제시함.",
+        "관련 과목 성취와 연계한 사고가 인상적임.",
+        "전공 관련 사례 제시가 자연스러움.",
+        "전공 관련 지식이 다소 피상적으로 제시됨.",
+        "진로 선택 이유가 구체성이 부족함.",
+        "전공 관련 최신 이슈에 대한 이해가 미흡함.",
+        "탐구 과정에서 전공 핵심 개념 이해 보완 필요."
+      ],
+      "탐구력": [
+        "문제 해결을 위한 사고 과정이 논리적이고 체계적임.",
+        "탐구 과정에서 새로운 시각을 제시함.",
+        "사실과 근거를 명확히 구분하여 사고함.",
+        "탐구 주제에 대해 구체적인 실험적 접근을 보여줌.",
+        "가설 설정과 검증 과정의 일관성이 뛰어남.",
+        "비판적 사고와 창의적 발상이 돋보임.",
+        "탐구 주제의 깊이가 다소 부족함.",
+        "문제 해결 접근에서 구조화가 미흡함.",
+        "탐구 내용의 구체적 사례 제시가 부족함.",
+        "추론 과정의 논리적 연결성이 약함."
+      ],
+      "인성": [
+        "예의 바르고 성실한 태도로 임함.",
+        "타인의 의견을 존중하며 경청 태도를 보임.",
+        "면접 전반에서 긍정적이고 진정성 있는 태도를 유지함.",
+        "협력적 사고와 배려심이 엿보임.",
+        "상황에 맞는 감정 표현이 자연스러움.",
+        "자기 이해와 성찰이 잘 드러남.",
+        "긴장감이 다소 표현에 영향을 미침.",
+        "자신감 있는 태도 유지에 보완 필요.",
+        "대화의 흐름을 주도하기 위한 적극성이 부족함.",
+        "감정 조절 측면에서 미세한 개선 필요."
+      ],
+      "성장 가능성": [
+        "꾸준한 학습 태도와 자기주도성이 뚜렷함.",
+        "실패를 통한 성찰과 개선 노력이 돋보임.",
+        "목표의식이 명확하고 구체적인 실천 계획이 있음.",
+        "도전적 상황에서도 긍정적 태도를 유지함.",
+        "학업 및 진로 관련 성장 스토리가 일관됨.",
+        "자기 발전에 대한 의지가 명확히 드러남.",
+        "성장 방향 설정은 되었으나 실행 전략이 부족함.",
+        "목표 인식은 있으나 장기 계획이 다소 미흡함.",
+        "발전 가능성은 있으나 표현에서 구체성이 약함.",
+        "경험과 성찰의 연결 고리가 다소 약함."
+      ]
+    };
+
+    const container = document.getElementById("rubricContainer");
+
+    rubricList.forEach(title => {
+      const div = document.createElement("div");
+      div.className = "rubric-item";
+      div.innerHTML = `
+        <label>${title}</label>
+        <div>
+          ${["A","B","C","D","E"].map(v => `<label><input type="radio" name="${title}" value="${v}"> ${v}</label>`).join(" ")}
+        </div>
+        <select class="comment-select" id="comment-${title}">
+          <option value="">코멘트 선택</option>
+          ${comments[title].map(c => `<option>${c}</option>`).join("")}
+        </select>
+      `;
+      container.appendChild(div);
+    });
+
+    function getFormData() {
+      const data = {
+        name: document.getElementById("studentName").value,
+        univ: document.getElementById("university").value,
+        major: document.getElementById("major").value,
+        admission: document.getElementById("admission").value,
+        session: document.getElementById("session").value,
+        feedback: document.getElementById("feedback").value,
+        rubric: {},
+        comment: {}
+      };
+      rubricList.forEach(r => {
+        const val = document.querySelector(`input[name="${r}"]:checked`);
+        data.rubric[r] = val ? val.value : "-";
+        data.comment[r] = document.getElementById(`comment-${r}`).value;
+      });
+      return data;
+    }
+
+    // 자동 저장
+    document.querySelectorAll("input, select, textarea").forEach(el => {
+      el.addEventListener("input", saveLocal);
+    });
+
+    function saveLocal() {
+      localStorage.setItem("interviewForm", JSON.stringify(getFormData()));
+    }
+
+    // 자동 복원
+    window.onload = () => {
+      const saved = localStorage.getItem("interviewForm");
+      if (!saved) return;
+      const d = JSON.parse(saved);
+      document.getElementById("studentName").value = d.name || "";
+      document.getElementById("university").value = d.univ || "";
+      document.getElementById("major").value = d.major || "";
+      document.getElementById("admission").value = d.admission || "";
+      document.getElementById("session").value = d.session || "1차시";
+      document.getElementById("feedback").value = d.feedback || "";
+      rubricList.forEach(r => {
+        if (d.rubric[r]) {
+          const radio = document.querySelector(`input[name="${r}"][value="${d.rubric[r]}"]`);
+          if (radio) radio.checked = true;
+        }
+        if (d.comment[r]) document.getElementById(`comment-${r}`).value = d.comment[r];
+      });
+    };
+
+    function previewPDF() {
+      const d = getFormData();
+      let text = `📘 ${d.univ} ${d.major} (${d.admission})\n${d.name} - ${d.session}\n\n`;
+      rubricList.forEach(r => {
+        text += `🔸 ${r}: ${d.rubric[r]} (${rubricDescriptions[d.rubric[r]] || "-"})\n🗨 ${d.comment[r] || "-"}\n\n`;
+      });
+      text += `🗒️ 종합 피드백:\n${d.feedback}`;
+      alert(text);
+    }
+
+    function savePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const d = getFormData();
+      let y = 20;
+      doc.setFontSize(14);
+      doc.text(`모두의 1:1 대입 면접 평가 v3.2`, 20, y); y += 10;
+      doc.setFontSize(12);
+      doc.text(`학생 이름: ${d.name}`, 20, y); y += 8;
+      doc.text(`대학: ${d.univ}`, 20, y); y += 8;
+      doc.text(`학과: ${d.major}`, 20, y); y += 8;
+      doc.text(`전형: ${d.admission}`, 20, y); y += 8;
+      doc.text(`면접 차시: ${d.session}`, 20, y); y += 10;
+
+      rubricList.forEach(r => {
+        doc.text(`${r}: ${d.rubric[r]} - ${rubricDescriptions[d.rubric[r]] || "-"}`, 20, y); y += 8;
+        const c = doc.splitTextToSize(`🗨 ${d.comment[r] || "-"}`, 170);
+        doc.text(c, 20, y); y += c.length * 6 + 4;
+      });
+
+      y += 6;
+      doc.text("🗒️ 종합 피드백", 20, y); y += 8;
+      const feedbackLines = doc.splitTextToSize(d.feedback, 170);
+      doc.text(feedbackLines, 20, y);
+
+      const filename = `${d.name}-${d.univ}-${d.major}-면접피드백-${d.session}.pdf`;
+      doc.save(filename);
+    }
+  </script>
+</body>
+</html>
