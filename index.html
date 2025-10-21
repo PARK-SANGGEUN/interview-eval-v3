@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모두의 1:1 대입 면접 평가 v3.4</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body {
+  font-family: 'Pretendard Variable', sans-serif;
+  background-color: #fff;
+  color: #1E2A38;
+  margin: 0;
+}
+header {
+  background-color: #1E2A38;
+  color: white;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.3rem;
+}
+main {
+  max-width: 950px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+.card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 1.2rem;
+  transition: all 0.3s ease;
+}
+.card h2 {
+  background-color: #F9FAFB;
+  margin: 0;
+  padding: 1rem;
+  border-bottom: 1px solid #E5E7EB;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #1E2A38;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card h2 span { color: #FF7A00; font-weight: 700; }
+.card-content {
+  display: none;
+  padding: 1.2rem;
+  animation: slide 0.3s ease;
+}
+@keyframes slide {
+  from {opacity:0; transform:translateY(-5px);}
+  to {opacity:1; transform:translateY(0);}
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+th, td {
+  border: 1px solid #E5E7EB;
+  padding: 0.6rem;
+  text-align: center;
+  word-break: keep-all;
+}
+@media (max-width: 768px) {
+  table { font-size: 0.8rem; }
+  td, th { display: block; width: 100%; }
+}
+.feedback-box {
+  background-color: #F5FAF8;
+  border: 1px solid #D1E7DD;
+  border-radius: 6px;
+  padding: 0.6rem;
+  width: 100%;
+  height: 80px;
+  margin-top: 0.6rem;
+  font-size: 0.95rem;
+}
+.comment-select {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+button {
+  background-color: #FF7A00;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0.5rem;
+}
+button:hover { background-color: #e56f00; }
+.note {
+  font-size: 0.9rem;
+  color: #555;
+  background: #f9f9f9;
+  padding: 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>모두의 1:1 대입 면접 평가 v3.4</h1>
+  <p>Copyright@All Teachers (피드백: p3412@nate.com)</p>
+</header>
+<main>
+  <div class="note">
+    💬 <strong>이 시스템은 선생님 면접 피드백을 위한 통합 평가 도구입니다.</strong><br>
+    각 평가 항목을 클릭하면 해당 루브릭이 펼쳐집니다.<br>
+    코멘트를 선택하면 아래 피드백 칸에 자동 추가되며, 여러 코멘트를 추가하거나 수정할 수 있습니다.<br>
+    모든 입력 내용은 자동 저장되며, [💾 PDF 저장] 버튼으로 파일을 저장 후 직접 공유하세요.
+  </div>
+
+  <div class="card">
+    <h2 onclick="toggleCard(this)">① 표현 및 소통능력 <span>▼</span></h2>
+    <div class="card-content">
+      <table>
+        <tr><th>세부 기준</th><th>A(매우우수)</th><th>B(우수)</th><th>C(보통)</th><th>D(미흡)</th><th>E(부족)</th></tr>
+        <tr>
+          <td>말의 명료성, 논리 구성, 면접 태도</td>
+          <td>질문 의도를 정확히 파악하고 논리적으로 표현</td>
+          <td>대부분 명확하나 약간의 논리적 비약 존재</td>
+          <td>기본 수준의 소통 가능</td>
+          <td>표현이 다소 불분명함</td>
+          <td>소통 및 이해 어려움</td>
+        </tr>
+      </table>
+      <label>등급 선택:</label><br>
+      <select id="grade1" class="comment-select">
+        <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+      </select>
+      <label>코멘트 선택:</label>
+      <select multiple class="comment-select" onchange="addComment(this, 'feedback1')">
+        <option>논리적으로 자신의 생각을 명확히 전달함.</option>
+        <option>질문에 대한 핵심을 잘 파악하여 대답함.</option>
+        <option>표현이 자연스러우나 핵심 요약이 미흡함.</option>
+        <option>의사소통 과정에서 논리의 흐름이 다소 끊김.</option>
+        <option>말의 속도나 어투 조절에서 개선의 여지가 있음.</option>
+      </select>
+      <textarea id="feedback1" class="feedback-box" placeholder="피드백 입력 또는 수정 가능"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 onclick="toggleCard(this)">② 전공적합성 <span>▼</span></h2>
+    <div class="card-content">
+      <table>
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>전공 관련 경험, 진로 동기</td>
+          <td>전공 이해도와 관련 경험 우수</td><td>전공 관심 뚜렷하나 일부 구체성 부족</td>
+          <td>관심은 있으나 경험 제한적</td><td>전공 동기 불명확</td><td>전공과 무관한 답변</td>
+        </tr>
+      </table>
+      <label>등급 선택:</label><br>
+      <select id="grade2" class="comment-select">
+        <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+      </select>
+      <label>코멘트 선택:</label>
+      <select multiple class="comment-select" onchange="addComment(this, 'feedback2')">
+        <option>지원 전공에 대한 이해가 깊고 관련 지식이 풍부함.</option>
+        <option>전공 선택의 동기가 명확하고 진로 계획이 구체적임.</option>
+        <option>전공 관련 활동 경험을 효과적으로 설명함.</option>
+        <option>전공 이해가 다소 피상적임.</option>
+        <option>진로 동기 표현이 구체성이 부족함.</option>
+      </select>
+      <textarea id="feedback2" class="feedback-box"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 onclick="toggleCard(this)">③ 탐구력 <span>▼</span></h2>
+    <div class="card-content">
+      <table>
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>논리적 사고, 문제해결, 지적 호기심</td>
+          <td>문제를 깊이 있게 분석, 창의적 대안 제시</td><td>논리적이고 적절한 분석</td><td>기본 수준의 사고 가능</td><td>논리적 구조 불분명</td><td>사고력·이해력 부족</td>
+        </tr>
+      </table>
+      <select multiple class="comment-select" onchange="addComment(this, 'feedback3')">
+        <option>탐구 주제의 문제의식을 명확히 제시함.</option>
+        <option>창의적 시각에서 논리를 전개함.</option>
+        <option>비판적 사고가 돋보임.</option>
+        <option>탐구의 깊이가 다소 부족함.</option>
+        <option>논리 전개가 다소 일관되지 않음.</option>
+      </select>
+      <textarea id="feedback3" class="feedback-box"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 onclick="toggleCard(this)">④ 인성 <span>▼</span></h2>
+    <div class="card-content">
+      <table>
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>협업, 배려, 책임감</td>
+          <td>성실하고 타인 존중, 협력 태도 우수</td><td>예의 바르고 성실함</td><td>일반적인 태도 유지</td><td>다소 소극적</td><td>무성의하거나 예의 부족</td>
+        </tr>
+      </table>
+      <select multiple class="comment-select" onchange="addComment(this, 'feedback4')">
+        <option>예의 바르고 성실한 태도로 임함.</option>
+        <option>타인의 의견을 존중함.</option>
+        <option>협력적 태도가 돋보임.</option>
+        <option>긴장감으로 표현이 경직됨.</option>
+        <option>자신감이 다소 부족함.</option>
+      </select>
+      <textarea id="feedback4" class="feedback-box"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 onclick="toggleCard(this)">⑤ 성장 가능성 <span>▼</span></h2>
+    <div class="card-content">
+      <table>
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>자기성찰, 발전의지, 계획</td>
+          <td>자기이해 높고 구체적 계획 제시</td><td>성찰과 목표의식 있음</td><td>발전의지는 있으나 구체성 부족</td><td>자기인식 약함</td><td>성찰 부족</td>
+        </tr>
+      </table>
+      <select multiple class="comment-select" onchange="addComment(this, 'feedback5')">
+        <option>꾸준한 학습 태도와 자기주도성이 뚜렷함.</option>
+        <option>실패를 통해 성찰하고 개선하려는 자세가 있음.</option>
+        <option>목표의식이 명확함.</option>
+        <option>발전의지는 있으나 계획 구체성이 부족함.</option>
+        <option>자기 성찰 과정이 부족함.</option>
+      </select>
+      <textarea id="feedback5" class="feedback-box"></textarea>
+    </div>
+  </div>
+
+  <div style="text-align:center;">
+    <button onclick="savePDF()">💾 PDF 저장</button>
+  </div>
+</main>
+
+<script>
+function toggleCard(el){
+  document.querySelectorAll('.card-content').forEach(c=>c.style.display='none');
+  let content = el.nextElementSibling;
+  content.style.display = 'block';
+}
+
+function addComment(sel, id){
+  const box = document.getElementById(id);
+  let selected = Array.from(sel.selectedOptions).map(o => o.text);
+  box.value += (box.value ? '\n' : '') + selected.join('\n');
+}
+
+function savePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 20;
+  doc.setFontSize(14);
+  doc.text("모두의 1:1 대입 면접 평가 v3.4", 20, y);
+  y += 10;
+  for(let i=1;i<=5;i++){
+    let fb = document.getElementById('feedback'+i).value;
+    if(fb){
+      const lines = doc.splitTextToSize(`${i}. ${fb}`, 170);
+      doc.text(lines, 20, y);
+      y += lines.length*6 + 5;
+    }
+  }
+  doc.save("면접피드백.pdf");
+}
+</script>
+</body>
+</html>
