@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>모두의 1:1 대입 면접 평가 v3</title>
+<style>
+  body {
+    font-family: "Pretendard", "Noto Sans KR", sans-serif;
+    background: #f7f9fb;
+    color: #222;
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    background: linear-gradient(120deg, #002b5b, #004b8d);
+    color: white;
+    text-align: center;
+    padding: 1.5rem 0;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+  }
+  header p {
+    font-size: 0.9rem;
+    margin: 0.3rem 0;
+  }
+  .container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 1rem;
+  }
+  .card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+  }
+  .card h3 {
+    color: #003366;
+    margin-top: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  td, th {
+    padding: 0.6rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    width: 25%;
+    color: #004b8d;
+  }
+  .grade-select input {
+    margin: 0 0.3rem;
+  }
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    resize: vertical;
+    font-size: 0.95rem;
+  }
+  button {
+    background: #004b8d;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover {
+    background: #0063cc;
+  }
+  .recommend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0.5rem 0;
+  }
+  .recommend span {
+    background: #eaf2ff;
+    color: #004b8d;
+    border-radius: 12px;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  footer {
+    text-align: center;
+    font-size: 0.8rem;
+    padding: 1rem;
+    color: #666;
+  }
+  @media (max-width: 768px) {
+    th { display: block; margin-top: 1rem; }
+    td { display: block; }
+    table { display: block; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>모두의 1:1 대입 면접 평가 v3</h1>
+    <p>Copyright ⓒ All Teachers (피드백: p3412@nate.com)</p>
+  </header>
+  <div class="container">
+    <div id="eval-area"></div>
+    <div class="card">
+      <h3>📝 종합 피드백</h3>
+      <div class="recommend">
+        <span>논리적이며 태도가 안정적임</span>
+        <span>전공 관심과 탐구심이 우수함</span>
+        <span>표현력 향상 필요</span>
+        <span>진정성이 돋보임</span>
+      </div>
+      <textarea id="feedback"></textarea>
+    </div>
+    <div style="text-align:center">
+      <button onclick="saveData()">저장</button>
+      <button onclick="resetData()">초기화</button>
+    </div>
+  </div>
+  <footer>ⓒ All Teachers | 문의: p3412@nate.com</footer>
+
+<script>
+const criteria = [
+  { title: "① 표현 및 소통능력", detail: "말의 명료성, 논리 구성, 비언어적 태도(시선·표정·자세)" },
+  { title: "② 전공적합성", detail: "전공 관련 경험, 진로 동기, 전공 이해도" },
+  { title: "③ 탐구력", detail: "논리적 사고, 문제해결 접근, 지적 호기심" },
+  { title: "④ 인성", detail: "협업, 배려, 성실성, 면접 태도" },
+  { title: "⑤ 성장 가능성", detail: "자기성찰, 발전 의지, 구체적 계획" },
+];
+
+function buildForm() {
+  const container = document.getElementById("eval-area");
+  container.innerHTML = "";
+  criteria.forEach((c, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h3>${c.title}</h3>
+      <p><small>${c.detail}</small></p>
+      <table>
+        <tr>
+          <th>등급</th>
+          <td class="grade-select">
+            ${["A","B","C","D","E"].map(g=>`
+              <label><input type="radio" name="grade${i}" value="${g}">${g}</label>`).join("")}
+          </td>
+        </tr>
+        <tr>
+          <th>코멘트</th>
+          <td><textarea name="comment${i}"></textarea></td>
+        </tr>
+      </table>`;
+    container.appendChild(card);
+  });
+  document.querySelectorAll(".recommend span").forEach(btn=>{
+    btn.addEventListener("click", e=>{
+      const text = e.target.textContent;
+      document.getElementById("feedback").value += (text + " ");
+    });
+  });
+  loadData();
+}
+
+function saveData() {
+  const data = {};
+  criteria.forEach((c,i)=>{
+    const grade = document.querySelector(`input[name='grade${i}']:checked`);
+    const comment = document.querySelector(`textarea[name='comment${i}']`);
+    data[c.title] = { grade: grade?grade.value:"", comment: comment.value };
+  });
+  data.feedback = document.getElementById("feedback").value;
+  localStorage.setItem("interviewEval", JSON.stringify(data));
+  alert("평가 내용이 저장되었습니다 (이 브라우저에 저장됨).");
+}
+
+function loadData() {
+  const saved = localStorage.getItem("interviewEval");
+  if (!saved) return;
+  const data = JSON.parse(saved);
+  criteria.forEach((c,i)=>{
+    if (data[c.title]) {
+      const grade = data[c.title].grade;
+      if (grade) document.querySelector(`input[name='grade${i}'][value='${grade}']`).checked = true;
+      document.querySelector(`textarea[name='comment${i}']`).value = data[c.title].comment || "";
+    }
+  });
+  document.getElementById("feedback").value = data.feedback || "";
+}
+
+function resetData() {
+  if (confirm("모든 입력을 초기화하시겠습니까?")) {
+    localStorage.removeItem("interviewEval");
+    buildForm();
+  }
+}
+buildForm();
+</script>
+</body>
+</html>
