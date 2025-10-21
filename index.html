@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모두의 1:1 대입 면접 평가 v3.5</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body {font-family:'Pretendard Variable',sans-serif;background:#fff;color:#1E2A38;margin:0;}
+header {background:#1E2A38;color:#fff;text-align:center;padding:2rem 1rem;}
+main {max-width:950px;margin:2rem auto;padding:1rem;}
+.card {background:#fff;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:1.2rem;}
+.card h2 {background:#F9FAFB;margin:0;padding:1rem;border-bottom:1px solid #E5E7EB;cursor:pointer;font-size:1.1rem;display:flex;justify-content:space-between;align-items:center;}
+.card-content {display:none;padding:1.2rem;animation:slide .3s ease;}
+@keyframes slide {from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
+table {width:100%;border-collapse:collapse;font-size:.9rem;}
+th,td {border:1px solid #E5E7EB;padding:.6rem;text-align:center;word-break:keep-all;cursor:pointer;}
+@media(max-width:768px){td,th{display:block;width:100%;}}
+.feedback-box {background:#F5FAF8;border:1px solid #D1E7DD;border-radius:6px;padding:.6rem;width:100%;height:80px;margin-top:.6rem;font-size:.95rem;}
+.comment-select {width:100%;margin-top:.5rem;padding:.5rem;border:1px solid #ccc;border-radius:6px;}
+button {background:#FF7A00;color:#fff;border:none;border-radius:8px;padding:.8rem 1.2rem;font-size:1rem;cursor:pointer;margin:.5rem;}
+button:hover{background:#e56f00;}
+.note {font-size:.9rem;color:#555;background:#f9f9f9;padding:.8rem;border-radius:6px;margin-bottom:1.5rem;}
+/* 색상 클래스 */
+.grade-A{background:#DCFCE7!important;}
+.grade-B{background:#E7F6E9!important;}
+.grade-C{background:#FEF9C3!important;}
+.grade-D{background:#FFEDD5!important;}
+.grade-E{background:#FEE2E2!important;}
+.selected{font-weight:bold;border:2px solid #FF7A00;}
+</style>
+</head>
+<body>
+<header>
+  <h1>모두의 1:1 대입 면접 평가 v3.5</h1>
+  <p>학생별 루브릭 클릭형 피드백 시스템 (선생님용)</p>
+</header>
+
+<main>
+  <div class="note">
+    💬 <strong>사용 안내</strong><br>
+    각 항목을 클릭하면 해당 루브릭이 펼쳐집니다.<br>
+    루브릭 표의 A~E 칸을 클릭하면 색상이 자동 반영되며, 피드백에 코멘트가 추가됩니다.<br>
+    모든 입력 내용은 자동 저장되며, [💾 PDF 저장] 버튼으로 파일을 내려받아 직접 공유하세요.
+  </div>
+
+  <!-- 예시: 표현 및 소통능력 -->
+  <div class="card">
+    <h2 onclick="toggleCard(this)">① 표현 및 소통능력 <span>▼</span></h2>
+    <div class="card-content">
+      <table id="rubric1">
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>말의 명료성, 논리 구성, 면접 태도</td>
+          <td onclick="selectGrade(this,1,'A')">질문 의도를 정확히 파악하고 논리적으로 표현</td>
+          <td onclick="selectGrade(this,1,'B')">대부분 명확하나 약간의 논리적 비약 존재</td>
+          <td onclick="selectGrade(this,1,'C')">기본 수준의 소통 가능</td>
+          <td onclick="selectGrade(this,1,'D')">표현이 다소 불분명함</td>
+          <td onclick="selectGrade(this,1,'E')">소통 및 이해 어려움</td>
+        </tr>
+      </table>
+      <textarea id="feedback1" class="feedback-box" placeholder="피드백 자동 추가 또는 직접 입력 가능"></textarea>
+    </div>
+  </div>
+
+  <!-- 전공적합성 -->
+  <div class="card">
+    <h2 onclick="toggleCard(this)">② 전공적합성 <span>▼</span></h2>
+    <div class="card-content">
+      <table id="rubric2">
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>전공 관련 경험, 진로 동기</td>
+          <td onclick="selectGrade(this,2,'A')">전공 이해도와 관련 경험 우수</td>
+          <td onclick="selectGrade(this,2,'B')">전공 관심 뚜렷하나 일부 구체성 부족</td>
+          <td onclick="selectGrade(this,2,'C')">관심은 있으나 경험 제한적</td>
+          <td onclick="selectGrade(this,2,'D')">전공 동기 불명확</td>
+          <td onclick="selectGrade(this,2,'E')">전공과 무관한 답변</td>
+        </tr>
+      </table>
+      <textarea id="feedback2" class="feedback-box"></textarea>
+    </div>
+  </div>
+
+  <!-- 탐구력 -->
+  <div class="card">
+    <h2 onclick="toggleCard(this)">③ 탐구력 <span>▼</span></h2>
+    <div class="card-content">
+      <table id="rubric3">
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>논리적 사고, 문제해결, 지적 호기심</td>
+          <td onclick="selectGrade(this,3,'A')">문제를 깊이 있게 분석, 창의적 대안 제시</td>
+          <td onclick="selectGrade(this,3,'B')">논리적이고 적절한 분석</td>
+          <td onclick="selectGrade(this,3,'C')">기본 수준의 사고 가능</td>
+          <td onclick="selectGrade(this,3,'D')">논리적 구조 불분명</td>
+          <td onclick="selectGrade(this,3,'E')">사고력·이해력 부족</td>
+        </tr>
+      </table>
+      <textarea id="feedback3" class="feedback-box"></textarea>
+    </div>
+  </div>
+
+  <!-- 인성 -->
+  <div class="card">
+    <h2 onclick="toggleCard(this)">④ 인성 <span>▼</span></h2>
+    <div class="card-content">
+      <table id="rubric4">
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>협업, 배려, 책임감</td>
+          <td onclick="selectGrade(this,4,'A')">성실하고 타인 존중, 협력 태도 우수</td>
+          <td onclick="selectGrade(this,4,'B')">예의 바르고 성실함</td>
+          <td onclick="selectGrade(this,4,'C')">일반적인 태도 유지</td>
+          <td onclick="selectGrade(this,4,'D')">다소 소극적</td>
+          <td onclick="selectGrade(this,4,'E')">무성의하거나 예의 부족</td>
+        </tr>
+      </table>
+      <textarea id="feedback4" class="feedback-box"></textarea>
+    </div>
+  </div>
+
+  <!-- 성장 가능성 -->
+  <div class="card">
+    <h2 onclick="toggleCard(this)">⑤ 성장 가능성 <span>▼</span></h2>
+    <div class="card-content">
+      <table id="rubric5">
+        <tr><th>세부 기준</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td>자기성찰, 발전의지, 계획</td>
+          <td onclick="selectGrade(this,5,'A')">자기이해 높고 구체적 계획 제시</td>
+          <td onclick="selectGrade(this,5,'B')">성찰과 목표의식 있음</td>
+          <td onclick="selectGrade(this,5,'C')">발전의지는 있으나 구체성 부족</td>
+          <td onclick="selectGrade(this,5,'D')">자기인식 약함</td>
+          <td onclick="selectGrade(this,5,'E')">성찰 부족</td>
+        </tr>
+      </table>
+      <textarea id="feedback5" class="feedback-box"></textarea>
+    </div>
+  </div>
+
+  <div style="text-align:center;">
+    <button onclick="savePDF()">💾 PDF 저장</button>
+  </div>
+</main>
+
+<script>
+function toggleCard(el){
+  document.querySelectorAll('.card-content').forEach(c=>c.style.display='none');
+  el.nextElementSibling.style.display='block';
+}
+
+function selectGrade(cell, idx, grade){
+  const row = cell.parentNode;
+  row.querySelectorAll('td').forEach(td=>td.classList.remove('selected','grade-A','grade-B','grade-C','grade-D','grade-E'));
+  cell.classList.add('selected','grade-'+grade);
+  const fb = document.getElementById('feedback'+idx);
+  const comments = {
+    1:{A:'논리적으로 자신의 생각을 명확히 전달함.',E:'소통 및 이해에 어려움이 있음.'},
+    2:{A:'전공에 대한 이해가 깊고 동기가 명확함.',E:'전공과의 관련성이 낮고 답변이 모호함.'},
+    3:{A:'문제를 깊이 분석하고 창의적 대안을 제시함.',E:'사고력과 논리 구조의 개선이 필요함.'},
+    4:{A:'성실하고 타인을 배려하는 태도가 돋보임.',E:'소극적이며 책임감 표현이 미흡함.'},
+    5:{A:'자기 성찰과 발전 의지가 뚜렷함.',E:'성찰 부족 및 계획 구체화 필요.'}
+  };
+  fb.value = comments[idx][grade] || '';
+}
+
+function savePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 20;
+  doc.setFontSize(14);
+  doc.text("모두의 1:1 대입 면접 평가 v3.5",20,y);
+  y += 10;
+  for(let i=1;i<=5;i++){
+    let fb = document.getElementById('feedback'+i).value;
+    if(fb){
+      const lines = doc.splitTextToSize(`${i}. ${fb}`,170);
+      doc.text(lines,20,y);
+      y += lines.length*6 + 5;
+    }
+  }
+  doc.save("면접피드백.pdf");
+}
+</script>
+</body>
+</html>
