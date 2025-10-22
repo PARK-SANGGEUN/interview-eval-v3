@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모두의 1:1 대입 면접 평가 v4.7 (All Teachers Edition)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --main:#f97316; --navy:#0f172a; --border:#d4d4d8; --bg:#f9fafb;
+  --A:#16a34a; --B:#06b6d4; --C:#facc15; --D:#fb923c; --E:#ef4444;
+}
+body{font-family:"Pretendard Variable",sans-serif;background:var(--bg);margin:0;color:#1e293b;}
+header{background:var(--navy);color:#fff;text-align:center;padding:2rem 1rem 1.2rem;border-bottom:4px solid var(--main);}
+header h1{margin:0;font-size:1.8rem;}
+header p{margin:.5rem 0 0;color:#cbd5e1;}
+header .sub{color:#cbd5e1;font-size:.9rem;margin-top:6px;}
+main{max-width:980px;margin:2rem auto;padding:0 1rem;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:1.2rem;box-shadow:0 2px 6px rgba(0,0,0,.05);}
+.card h2{background:#f1f5f9;border-bottom:1px solid var(--border);padding:.9rem 1.2rem;font-size:1.05rem;margin:0;}
+.card .content{padding:1rem 1.5rem;}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+label{font-weight:600;align-self:center;}
+.input{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.95rem;}
+.input:focus{outline:2px solid var(--main);}
+.note{background:#fff8f1;border-left:6px solid var(--main);padding:1.2rem 1rem;border-radius:8px;margin:1.5rem 0;color:#475569;font-size:.95rem;}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:.6rem;}
+th,td{border:1px solid var(--border);padding:.6rem;text-align:center;}
+th{background:#f9fafb;font-weight:600;}
+td.grade{cursor:pointer;transition:all .2s;}
+td.grade:hover{background:#fff7ed;}
+.selected-A{background:#dcfce7;border:2px solid var(--A);}
+.selected-B{background:#cffafe;border:2px solid var(--B);}
+.selected-C{background:#fef9c3;border:2px solid var(--C);}
+.selected-D{background:#ffedd5;border:2px solid var(--D);}
+.selected-E{background:#fee2e2;border:2px solid var(--E);}
+.textarea{width:100%;height:120px;border:1px solid #cbd5e1;border-radius:8px;padding:10px;margin-top:8px;}
+select{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;margin-top:8px;}
+button{background:var(--main);color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:1rem;cursor:pointer;}
+button:hover{background:#ea580c;}
+footer{text-align:center;color:#64748b;margin:2rem 0;font-size:.9rem;}
+@media (max-width:768px){
+  .info-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>모두의 1:1 대입 면접 평가 v4.7</h1>
+  <p>All Teachers — 학생별 루브릭 기반 피드백 시스템</p>
+  <p class="sub">Copyright@All Teachers (피드백 p3412@nate.com)</p>
+</header>
+
+<main id="capture">
+  <div class="note">
+    <b>📘 사용 안내</b><br>
+    정성 중심형 1:1 면접 피드백 시스템입니다.<br>
+    각 항목의 A~E 등급을 클릭하면 색상이 표시되고, 코멘트를 선택하면 자동 입력됩니다.<br>
+    여러 코멘트를 누르면 누적 입력되며, 수정도 가능합니다.<br>
+    [💾 PDF 저장]을 누르면 모든 입력이 잘림 없이 한글로 저장됩니다.
+  </div>
+
+  <section class="card">
+    <h2>기본 정보</h2>
+    <div class="content info-grid">
+      <label>학생 이름</label><input id="name" class="input" placeholder="예: 김민서">
+      <label>대학</label><input id="univ" class="input" placeholder="예: 경희대학교">
+      <label>학과</label><input id="major" class="input" placeholder="예: 물리학과">
+      <label>차시</label><input id="session" class="input" placeholder="예: 2차 면접">
+    </div>
+  </section>
+
+  <div id="rubrics"></div>
+
+  <section class="card">
+    <h2>⑦ 종합 피드백</h2>
+    <div class="content">
+      <select id="summarySelect" onchange="addComment(this, 'summary')">
+        <option>코멘트 선택</option>
+        <option>면접 태도와 사고력이 우수하며 진정성 있는 답변을 제시함.</option>
+        <option>표현이 명확하고 설득력이 높음.</option>
+        <option>자신의 경험을 구체적으로 언급하며 학업 의지를 드러냄.</option>
+        <option>전공 및 진로 연계가 우수함.</option>
+        <option>질문에 대해 논리적인 사고를 보임.</option>
+        <option>내용은 충실하나 일부 구체성 부족.</option>
+        <option>표현력은 안정적이나 사고의 흐름이 다소 단조로움.</option>
+        <option>답변의 깊이가 부족하였으나 태도는 성실함.</option>
+        <option>면접 준비가 다소 부족했으나 개선 가능성 보임.</option>
+        <option>긴장감이 있었으나 회복력과 성의는 긍정적임.</option>
+      </select>
+      <textarea id="summary" class="textarea" placeholder="종합 피드백 입력 또는 수정 가능"></textarea>
+    </div>
+  </section>
+
+  <div style="text-align:center;margin-top:20px;">
+    <button id="pdfBtn">💾 PDF 저장</button>
+  </div>
+</main>
+
+<footer>Copyright@All Teachers (피드백 p3412@nate.com)</footer>
+
+<script>
+const rubricData=[
+  {title:"① 표현 및 소통능력",criteria:"질문 이해도, 논리 구성, 전달력",levels:{A:"명확하고 논리적으로 표현",B:"대체로 명확하나 약간의 비약",C:"기본적인 소통 가능",D:"표현이 다소 불명확",E:"소통 어려움"},comments:[
+    "논리적이며 명확한 언어로 표현함.","표현의 명료성과 설득력이 우수함.","면접 태도와 발음이 안정적임.","질문 의도를 정확히 이해함.",
+    "대체로 명확하나 일부 내용이 부족함.","표현력은 안정적이나 생동감 부족.","핵심 전달은 되었으나 구조가 단순함.",
+    "표현이 모호하고 구체성 부족.","답변의 일관성이 다소 부족함.","내용 이해도가 부족함."
+  ]},
+  {title:"② 전공적합성",criteria:"전공 이해도, 관련 경험",levels:{A:"전공 이해 및 열정 우수",B:"전공 관심 뚜렷",C:"일반적 수준",D:"전공 동기 부족",E:"전공 이해 미흡"},comments:[
+    "전공 관련 탐구 경험이 풍부함.","진로 목표와 전공 연결이 명확함.","전공과 관련된 실제 사례 제시.","탐구 중심의 사고 태도 우수.",
+    "전공 흥미는 있으나 구체성 부족.","관련 경험이 제한적.","관심은 있으나 표현이 다소 단조.",
+    "전공 연계가 불명확함.","탐구 활동이 피상적임.","전공 이해도 부족함."
+  ]},
+  {title:"③ 학업역량",criteria:"지식, 탐구력, 학업 태도",levels:{A:"탐구력 우수",B:"학습 의지 우수",C:"기본적 이해",D:"노력 부족",E:"학습 태도 미흡"},comments:[
+    "탐구력과 분석력이 뛰어남.","기초지식이 충실함.","문제 해결력이 탁월함.","학업 열정이 꾸준히 드러남.",
+    "학습 태도가 성실함.","이해도는 있으나 적용이 부족.","기초 지식은 있으나 표현이 단조로움.",
+    "문제 이해가 다소 부족함.","핵심 내용을 놓침.","개념 이해 부족."
+  ]},
+  {title:"④ 인성 및 태도",criteria:"예의, 성실성, 배려",levels:{A:"예의 바르고 성실함",B:"성실하나 긴장함",C:"보통 수준",D:"소극적",E:"무성의"},comments:[
+    "예의와 태도가 매우 성숙함.","적극적이고 성실한 태도.","상대방을 존중하는 자세.","자신감과 겸손의 균형 유지.",
+    "성실하지만 약간의 긴장감.","자세는 바르나 표정이 경직됨.","태도는 무난하나 생동감 부족.",
+    "표현이 소극적임.","참여 의지가 약함.","태도에서 성의 부족."
+  ]},
+  {title:"⑤ 사고력",criteria:"논리, 창의, 문제해결",levels:{A:"논리적 사고 우수",B:"체계적 사고 가능",C:"기초적 사고",D:"단편적 사고",E:"사고력 부족"},comments:[
+    "핵심을 정확히 분석함.","논리 구조가 체계적임.","유연한 사고로 문제 해결.","새로운 시각 제시.",
+    "논리적이나 구체성 부족.","표현은 좋으나 사고의 깊이 미흡.","단순한 답변 위주.",
+    "핵심을 파악하지 못함.","생각의 전환이 느림.","문제 해결 방식이 소극적임."
+  ]},
+  {title:"⑥ 발전가능성",criteria:"성장 의지, 자기성찰",levels:{A:"성장 가능성 높음",B:"의지 뚜렷",C:"보통",D:"노력 부족",E:"성찰 부족"},comments:[
+    "자기주도적 학습 태도 우수.","발전 방향이 명확함.","목표의식이 구체적임.","꾸준한 성장 의지.",
+    "성찰 의지는 있으나 실행 부족.","발전 계획이 다소 모호.","의지는 있으나 근거 부족.",
+    "자기이해 부족.","노력의 구체성 부족.","성장 가능성 미흡."
+  ]}
+];
+
+// 루브릭 생성
+window.onload=()=>{
+  const container=document.getElementById("rubrics");
+  rubricData.forEach((r,idx)=>{
+    let rows=Object.entries(r.levels).map(([g,d])=>`
+      <tr><td class="grade" onclick="selectGrade(this)">${g}</td><td>${d}</td></tr>`).join("");
+    const comments=r.comments.map(c=>`<option>${c}</option>`).join("");
+    container.innerHTML+=`
+    <section class="card">
+      <h2>${r.title}</h2>
+      <div class="content">
+        <b>세부 기준:</b> ${r.criteria}
+        <table>${rows}</table>
+        <select onchange="addComment(this,'fb${idx}')"><option>코멘트 선택</option>${comments}</select>
+        <textarea id="fb${idx}" class="textarea" placeholder="피드백 입력 또는 수정 가능"></textarea>
+      </div>
+    </section>`;
+  });
+};
+
+// A~E 선택 기능
+function selectGrade(td){
+  const table=td.closest("table");
+  table.querySelectorAll(".grade").forEach(cell=>cell.className="grade");
+  td.classList.add("selected-"+td.innerText);
+}
+
+// 코멘트 누적 입력
+function addComment(sel,id){
+  if(sel.value){
+    const t=document.getElementById(id);
+    t.value+=(t.value?'\n':'')+sel.value;
+    sel.value="";
+  }
+}
+
+// PDF 전체 캡처
+document.getElementById("pdfBtn").addEventListener("click",async()=>{
+  const {jsPDF}=window.jspdf;
+  const element=document.getElementById("capture");
+  const canvas=await html2canvas(element,{scale:2,scrollY:-window.scrollY,useCORS:true,windowHeight:document.body.scrollHeight});
+  const imgData=canvas.toDataURL("image/png");
+  const pdf=new jsPDF("p","mm","a4");
+  const pageWidth=210,pageHeight=297;
+  const imgHeight=canvas.height*pageWidth/canvas.width;
+  let heightLeft=imgHeight,position=0;
+  pdf.addImage(imgData,"PNG",0,position,pageWidth,imgHeight);
+  heightLeft-=pageHeight;
+  while(heightLeft>0){
+    position=heightLeft-imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData,"PNG",0,position,pageWidth,imgHeight);
+    heightLeft-=pageHeight;
+  }
+  pdf.save(`${document.getElementById("name").value||"면접"}_평가.pdf`);
+});
+</script>
+</body>
+</html>
